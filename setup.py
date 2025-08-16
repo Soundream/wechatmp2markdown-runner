@@ -85,25 +85,14 @@ def open_extension_installation(browser_choice='both'):
     extension_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web_extension")
     
     if browser_choice in ['chrome', 'both']:
-        webbrowser.open("chrome://extensions")
-        print("\n请在Chrome扩展管理页面中:")
-        print("1. 开启右上角的'开发者模式'")
-        print(f"2. 点击'加载已解压的扩展程序'并选择以下文件夹: \n   {extension_path}")
+        print("1. 请手动打开Chrome并访问edge://extensions")
+        print("2. 开启右上角的'开发者模式'")
+        print(f"3. 点击'加载已解压的扩展程序'并选择以下文件夹: \n   {extension_path}")
     
-    if browser_choice in ['edge', 'both'] and system == "Windows":
-        try:
-            webbrowser.open("edge://extensions")
-            print("\n请在Microsoft Edge扩展管理页面中:")
-            print("1. 开启左侧的'开发人员模式'")
-            print(f"2. 点击'加载解压缩的扩展'并选择以下文件夹: \n   {extension_path}")
-        except:
-            if browser_choice == 'edge':
-                print("无法打开Edge浏览器扩展页面，请手动打开edge://extensions")
-    elif browser_choice == 'edge' and system != "Windows":
-        print("在非Windows系统上可能无法直接打开Edge浏览器扩展页面")
-        print("请手动打开Edge并访问edge://extensions")
-        print(f"然后选择扩展文件夹: {extension_path}")
-
+    if browser_choice in ['edge', 'both']:
+        print("1. 请手动打开Edge并访问edge://extensions")
+        print("2. 开启左侧的'开发人员模式'")
+        print(f"3. 点击'加载解压缩的扩展'并选择以下文件夹: \n   {extension_path}")
 
 def setup_autostart():
     """配置开机自启动"""
