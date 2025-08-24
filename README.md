@@ -22,9 +22,10 @@
 - 自动转换为 Markdown 格式
 - 保留原文图片
 - 简单易用的浏览器插件界面
-- 跨平台支持（Windows/macOS）
-- 多浏览器支持（Chrome/Edge）
+- 跨平台支持（Windows/macOS，自动检测32/64位）
+- 多浏览器支持（自动适配Chrome/Edge）
 - 一键式启动配置
+- 增强型浏览器信息检测
 
 ## 使用方法
 
@@ -124,6 +125,7 @@ This project extends [fengxxc/wechatmp2markdown](https://github.com/fengxxc/wech
 - Automatic conversion to Markdown format
 - Image preservation
 - User-friendly browser extension interface
-- Cross-platform support (Windows/macOS)
-- Multi-browser support (Chrome/Edge)
+- Cross-platform support (Windows/macOS, auto-detect 32/64-bit)
+- Multi-browser support (auto-adapting to Chrome/Edge)
 - One-click setup and configuration
+- Enhanced browser detection

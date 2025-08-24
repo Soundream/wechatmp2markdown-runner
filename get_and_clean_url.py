@@ -70,11 +70,55 @@ def _get_macos_browser_tab_info():
 def _get_windows_browser_tab_info():
     """
     在Windows系统上尝试获取浏览器标签页信息
-    注意：Windows无法直接获取，通常需要通过插件提供URL
+    通过PowerShell尝试获取Chrome和Edge的活动标签页信息
     """
-    # Windows无法像macOS那样直接通过脚本获取浏览器URL
-    # 这里可以扩展其他方法尝试获取浏览器URL（如通过第三方库）
-    print("Windows系统暂不支持自动获取浏览器URL，请通过命令行参数或插件传入URL")
+    try:
+        # 尝试获取Chrome信息
+        chrome_ps_script = """
+        Add-Type -AssemblyName System.Windows.Forms
+        Add-Type -AssemblyName Microsoft.VisualBasic
+        
+        try {
+            $processes = Get-Process chrome -ErrorAction SilentlyContinue
+            if ($processes) {
+                $title = (Get-Process | Where-Object {$_.MainWindowTitle -like "*Chrome*" -and $_.MainWindowTitle -ne ""} | Select-Object -First 1).MainWindowTitle
+                $url = "chrome://active-tab"
+                return "$title`n$url"
+            }
+        } catch {}
+        return ""
+        """
+        result = subprocess.run(["powershell", "-Command", chrome_ps_script], capture_output=True, text=True)
+        if result.returncode == 0 and result.stdout.strip():
+            lines = result.stdout.strip().split('\n', 1)
+            if len(lines) == 2:
+                return lines[0], lines[1]
+                
+        # 尝试获取Edge信息
+        edge_ps_script = """
+        Add-Type -AssemblyName System.Windows.Forms
+        Add-Type -AssemblyName Microsoft.VisualBasic
+        
+        try {
+            $processes = Get-Process msedge -ErrorAction SilentlyContinue
+            if ($processes) {
+                $title = (Get-Process | Where-Object {$_.MainWindowTitle -like "*Edge*" -and $_.MainWindowTitle -ne ""} | Select-Object -First 1).MainWindowTitle
+                $url = "edge://active-tab"
+                return "$title`n$url"
+            }
+        } catch {}
+        return ""
+        """
+        result = subprocess.run(["powershell", "-Command", edge_ps_script], capture_output=True, text=True)
+        if result.returncode == 0 and result.stdout.strip():
+            lines = result.stdout.strip().split('\n', 1)
+            if len(lines) == 2:
+                return lines[0], lines[1]
+    except Exception as e:
+        print(f"Windows获取浏览器URL时发生错误: {str(e)}")
+        
+    # 如果无法获取，返回空结果
+    print("Windows系统未能获取浏览器URL，请通过命令行参数或插件传入URL")
     return '', ''
 
 

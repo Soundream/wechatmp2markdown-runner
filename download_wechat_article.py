@@ -14,6 +14,9 @@ def download_wechat_article(url, app_path, output_path='./downloads', image_mode
         app_path (str): 应用程序所在路径。
         output_path (str): 保存文件的目录路径。
         image_mode (str): 图片保存模式，可选 'save' 或 'base64'。
+        
+    Returns:
+        dict: 包含下载结果信息的字典，如标题、路径等
     """
     system = platform.system()
     
@@ -21,7 +24,10 @@ def download_wechat_article(url, app_path, output_path='./downloads', image_mode
     if system == "Darwin":  # macOS
         executable = "wechatmp2markdown-v1.1.11_osx_amd64"
     elif system == "Windows":  # Windows
-        executable = "wechatmp2markdown-v1.1.11_win64.exe"
+        # 检测32位或64位系统
+        import struct
+        is_64bit = struct.calcsize("P") * 8 == 64
+        executable = "wechatmp2markdown-v1.1.11_win64.exe" if is_64bit else "wechatmp2markdown-v1.1.11_win32.exe"
     else:  # Linux或其他系统
         executable = "wechatmp2markdown-v1.1.11_linux_amd64"
         
@@ -73,6 +79,21 @@ def download_wechat_article(url, app_path, output_path='./downloads', image_mode
         print("\n下载成功！")
         print("输出结果:")
         print(result.stdout)
+        
+        # 尝试从输出中提取标题信息
+        title = "未知标题"
+        for line in result.stdout.split('\n'):
+            if "标题:" in line:
+                title = line.split("标题:", 1)[1].strip()
+                break
+        
+        # 返回下载结果信息
+        return {
+            "success": True,
+            "title": title,
+            "output": result.stdout,
+            "output_path": downloads_path
+        }
     except subprocess.CalledProcessError as e:
         print(f"下载失败: {e}")
         print("错误输出:")
@@ -90,3 +111,10 @@ def download_wechat_article(url, app_path, output_path='./downloads', image_mode
             print(f"输出目录 '{downloads_path}' 可写入")
         except Exception as write_error:
             print(f"错误: 无法写入输出目录 '{downloads_path}': {write_error}")
+            
+        # 返回错误信息
+        return {
+            "success": False,
+            "error": str(e),
+            "error_details": e.stderr if hasattr(e, 'stderr') else None
+        }
