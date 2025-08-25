@@ -232,6 +232,7 @@ def start_server(port=DEFAULT_PORT):
 def main():
     """主入口函数"""
     import argparse
+    global DEFAULT_TIMEOUT_MINUTES
     
     parser = argparse.ArgumentParser(description='轻量级微信文章下载服务器')
     parser.add_argument('--port', type=int, default=DEFAULT_PORT, help='服务器端口号')
@@ -239,7 +240,6 @@ def main():
     
     args = parser.parse_args()
     
-    global DEFAULT_TIMEOUT_MINUTES
     DEFAULT_TIMEOUT_MINUTES = args.timeout
     
     start_server(args.port)

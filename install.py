@@ -7,6 +7,7 @@ import platform
 import subprocess
 import shutil
 import time
+import importlib.util
 from pathlib import Path
 
 def print_header():
@@ -31,15 +32,17 @@ def install_dependencies():
     """安装依赖"""
     print("\n安装必要依赖...")
     
-    # 安装PyQt
+    # 安装PyQt（安静模式）
     print("正在安装PyQt6...")
     try:
-        subprocess.run([sys.executable, "-m", "pip", "install", "PyQt6"], check=True)
+        subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "PyQt6"], 
+                      check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         print("✓ PyQt6安装成功")
     except subprocess.CalledProcessError:
         print("! PyQt6安装失败，尝试安装PyQt5...")
         try:
-            subprocess.run([sys.executable, "-m", "pip", "install", "PyQt5"], check=True)
+            subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "PyQt5"], 
+                          check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
             print("✓ PyQt5安装成功")
         except subprocess.CalledProcessError:
             print("错误: 无法安装PyQt，请手动安装: pip install PyQt6")
@@ -74,6 +77,28 @@ def check_files():
         print("! 未找到图标文件，将使用系统默认图标")
     
     return all_files_present
+
+def get_tray_app_functions():
+    """动态导入tray_app.py中的自启动相关函数"""
+    try:
+        # 获取tray_app.py的路径
+        tray_app_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tray_app.py")
+        
+        # 检查文件是否存在
+        if not os.path.exists(tray_app_path):
+            print(f"错误: 找不到文件 {tray_app_path}")
+            return None, None
+        
+        # 动态导入模块
+        spec = importlib.util.spec_from_file_location("tray_app", tray_app_path)
+        tray_app = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(tray_app)
+        
+        # 返回需要的函数
+        return tray_app.setup_autostart, tray_app.check_autostart_status
+    except Exception as e:
+        print(f"导入tray_app.py时出错: {str(e)}")
+        return None, None
 
 def check_old_autostart():
     """检查并移除旧版本的自启动设置"""
@@ -134,7 +159,7 @@ def create_desktop_shortcut(create=True, icon_path=None):
     if not icon_path:
         # 使用默认图标
         icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                               "web_extension/icons/white-bg-icon1.png")
+                               "web_extension/icons/white-bg-icon.ico")
     
     if system == "Windows":
         desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
@@ -209,27 +234,26 @@ def main():
     create_shortcut = create_shortcut == "" or create_shortcut == "y"
     
     # 如果用户选择创建快捷方式，询问是否使用自定义图标
-    icon_path = None
-    if create_shortcut:
-        use_custom_icon = input("是否使用自定义图标? (y/n, 默认n): ").strip().lower()
-        if use_custom_icon == "y":
-            default_icon = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+    icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
                                      "web_extension/icons/icon.ico")
-            icon_path = input(f"请输入图标路径 (默认: {default_icon}): ").strip()
-            if not icon_path:
-                icon_path = default_icon
-            
-            # 检查图标文件是否存在
-            if not os.path.exists(icon_path):
-                print(f"警告: 图标文件不存在: {icon_path}")
-                use_default = input("使用默认图标? (y/n, 默认y): ").strip().lower()
-                if use_default == "" or use_default == "y":
-                    icon_path = default_icon
-                else:
-                    icon_path = None
-    
+             
     # 创建桌面快捷方式
     create_desktop_shortcut(create=create_shortcut, icon_path=icon_path)
+    
+    # 询问是否设置开机自启动
+    autostart_choice = input("\n是否设置开机自启动? (y/n, 默认y): ").strip().lower()
+    if autostart_choice == "" or autostart_choice == "y":
+        print("\n配置开机自启动...")
+        
+        # 获取tray_app.py中的函数
+        setup_autostart, _ = get_tray_app_functions()
+        
+        if setup_autostart and setup_autostart(True):
+            print("✓ 开机自启动设置成功")
+        else:
+            print("! 开机自启动设置失败，可能是由于权限问题或找不到相关函数")
+    else:
+        print("\n跳过设置开机自启动")
     
     # 询问是否立即启动应用
     print("\n安装完成！")
