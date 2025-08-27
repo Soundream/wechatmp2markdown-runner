@@ -13,6 +13,9 @@ from pathlib import Path
 from download_wechat_article import download_wechat_article
 from get_and_clean_url import clean_url
 
+# 服务器是否常驻（不自动关闭）
+IS_PERMANENT_SERVER = True
+
 # 默认端口和超时时间
 DEFAULT_PORT = 5001
 DEFAULT_TIMEOUT_MINUTES = 15
@@ -189,6 +192,11 @@ def start_shutdown_timer():
     """开始计时器，超时后关闭服务器"""
     global shutdown_timer, server_instance, is_server_running
     
+    # 如果是常驻服务器，则不启动关闭计时器
+    if IS_PERMANENT_SERVER:
+        print("服务器设置为常驻模式，不会自动关闭")
+        return
+    
     def shutdown_server():
         global server_instance, is_server_running
         if server_instance:
@@ -201,7 +209,7 @@ def start_shutdown_timer():
     shutdown_timer.start()
 
 def start_server(port=DEFAULT_PORT):
-    """启动临时HTTP服务器"""
+    """启动HTTP服务器"""
     global server_instance, is_server_running
     
     # 检查端口是否已被占用
@@ -214,10 +222,13 @@ def start_server(port=DEFAULT_PORT):
         server_instance = socketserver.TCPServer(("127.0.0.1", port), DownloadRequestHandler)
         is_server_running = True
         
-        # 启动超时关闭计时器
+        # 启动超时关闭计时器（如果不是常驻模式）
         start_shutdown_timer()
         
-        print(f"轻量级HTTP服务已启动在端口 {port}，闲置 {DEFAULT_TIMEOUT_MINUTES} 分钟后将自动关闭")
+        if IS_PERMANENT_SERVER:
+            print(f"HTTP服务已启动在端口 {port}，服务器设置为常驻模式")
+        else:
+            print(f"HTTP服务已启动在端口 {port}，闲置 {DEFAULT_TIMEOUT_MINUTES} 分钟后将自动关闭")
         
         # 在主线程中运行服务器
         server_instance.serve_forever()

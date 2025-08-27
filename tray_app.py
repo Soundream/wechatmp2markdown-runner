@@ -216,6 +216,8 @@ class WechatArticleDownloaderTray:
     
     def handle_message(self, message):
         """处理来自浏览器扩展的消息"""
+        # 以下代码保留但暂时不启用web插件唤醒服务器的逻辑
+        """
         # 检查消息是否包含URL
         if isinstance(message, dict) and 'url' in message:
             url = message['url']
@@ -224,6 +226,9 @@ class WechatArticleDownloaderTray:
         elif isinstance(message, str) and message.startswith('http'):
             # 直接作为URL处理
             self.ensure_server_running(message)
+        """
+        # 服务器现在由应用启动时自动启动，不需要通过消息唤醒
+        print(f"收到消息: {message}，但暂不处理（服务器已在应用启动时启动）")
     
     def show_message(self, title, message):
         """显示消息通知"""
@@ -243,10 +248,13 @@ class WechatArticleDownloaderTray:
     
     def run(self):
         """运行应用"""
+        # 自动启动服务器
+        self.ensure_server_running()
+        
         # 显示欢迎消息
         self.tray_icon.showMessage(
             "公众号文章下载器",
-            "已在后台运行，可通过浏览器扩展下载文章",
+            "已在后台运行，服务器已自动启动",
             QSystemTrayIcon.MessageIcon.Information,
             3000  # 显示3秒
         )
